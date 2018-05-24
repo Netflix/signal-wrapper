@@ -3,11 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"os"
 	"os/exec"
 	"os/signal"
 	"syscall"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func runShutdownScript(ctx context.Context, shutdownScript string) {
@@ -42,7 +43,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	if len(os.Args) < 3 {
-		fmt.Fprintf(os.Stderr,"Usage: %s [shutdown command] [cmd] [args]\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "Usage: %s [shutdown command] [cmd] [args]\n", os.Args[0])
 		os.Exit(1)
 	}
 	shutdownScript := os.Args[1]
