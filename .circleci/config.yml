@@ -1,1 +1,14 @@
 version: 2
+workflows:
+  version: 2
+  build_and_test:
+    build:
+      docker:
+        - image: titusoss/titus-ci-builder
+      resource_class: xlarge
+      working_directory: /go/src/github.com/Netflix/signal-wrapper
+      steps:
+        - checkout
+        - run gometalinter --vendor --tests --vendored-linters  --disable=gotype --enable=unused --enable=goimports --enable=gofmt ./...
+    jobs:
+      - build
