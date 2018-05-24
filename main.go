@@ -1,36 +1,55 @@
 package main
 
-import "fmt"
-import "os/exec"
-import "os"
-import "os/signal"
-import "syscall"
-import "time"
+import (
+	"context"
+	"fmt"
+	"os"
+	"os/exec"
+	"os/signal"
+	"syscall"
 
-var cmd *exec.Cmd
+	log "github.com/sirupsen/logrus"
+)
 
-func signalWatcher() {
-	signalCount := 0
-	signalChan := make(chan os.Signal, 10)
-	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
+func runShutdownScript(ctx context.Context, shutdownScript string) {
+	cmd := exec.CommandContext(ctx, shutdownScript)
+	// Pass through stderr / stdout directly
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		log.WithField("error", err).Error("Error running shutdown script")
+	}
+}
 
-	for signal := range signalChan {
-		fmt.Println("Retransmitting signal")
-		if signalCount == 0 {
-			fmt.Println("Delaying first signal by 10s")
-			time.Sleep(10 * time.Second)
-			signalCount = 1
-		}
+func signalWatcher(ctx context.Context, cmd *exec.Cmd, shutdownScript string) {
+	signalChan := make(chan os.Signal, 100)
+	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+
+	signal := <-signalChan
+	log.Info("Received first signal: ", signal)
+	log.WithField("shutdownScript", shutdownScript).Info("Running shutdown script")
+	runShutdownScript(ctx, shutdownScript)
+	log.WithField("shutdownScript", shutdownScript).Info("Shutdown script complete")
+	log.Info("Forwarding signal: ", signal)
+	cmd.Process.Signal(signal)
+
+	for signal = range signalChan {
+		log.Info("Forwarding signal: ", signal)
 		cmd.Process.Signal(signal)
 	}
 }
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Printf("Usage: %s [cmd] [args]\n", os.Args[1])
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	if len(os.Args) < 3 {
+		fmt.Fprintf(os.Stderr, "Usage: %s [shutdown command] [cmd] [args]\n", os.Args[0])
 		os.Exit(1)
 	}
-	go signalWatcher()
-	cmd = exec.Command(os.Args[1], os.Args[2:]...)
+	shutdownScript := os.Args[1]
+
+	cmd := exec.Command(os.Args[2], os.Args[3:]...)
+	go signalWatcher(ctx, cmd, shutdownScript)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
