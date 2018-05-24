@@ -35,6 +35,19 @@ jobs:
           root: bin
           paths:
             - signal-watcher-linux-amd64
+  test:
+    docker:
+      - image: python:3-stretch
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: place signal-wrapper binary
+          command: mv /tmp/workspace/signal-watcher-linux-amd64 signal-watcher
+      - run:
+          name: tests
+          command: ./test.sh
 
 workflows:
   version: 2
@@ -42,3 +55,6 @@ workflows:
     jobs:
       - lint
       - build
+      - test:
+          requires:
+            - build
