@@ -24,13 +24,16 @@ func runShutdownScript(ctx context.Context, shutdownScript string) {
 
 func signalWatcher(ctx context.Context, cmd *exec.Cmd, shutdownScript string) {
 	signalChan := make(chan os.Signal, 100)
-	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+	// Listen for all signals
+	signal.Notify(signalChan)
 
 	signal := <-signalChan
 	log.Info("Received first signal: ", signal)
-	log.WithField("shutdownScript", shutdownScript).Info("Running shutdown script")
-	runShutdownScript(ctx, shutdownScript)
-	log.WithField("shutdownScript", shutdownScript).Info("Shutdown script complete")
+	if signal == syscall.SIGTERM || signal == syscall.SIGINT {
+		log.WithField("shutdownScript", shutdownScript).WithField("signal", signal.String()).Info("Running shutdown script")
+		runShutdownScript(ctx, shutdownScript)
+		log.WithField("shutdownScript", shutdownScript).Info("Shutdown script complete")
+	}
 	log.Info("Forwarding signal: ", signal)
 	if err := cmd.Process.Signal(signal); err != nil {
 		log.Error("Unable to forward signal: ", err)
@@ -65,8 +68,8 @@ func main() {
 			if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
 				os.Exit(status.ExitStatus())
 			}
-		} else {
-			os.Exit(1)
 		}
+		log.WithField("error", err).Fatal("Unable to run command")
+		os.Exit(1)
 	}
 }
