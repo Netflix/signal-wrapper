@@ -7,7 +7,9 @@ jobs:
     working_directory: /go/src/github.com/Netflix/signal-wrapper
     steps:
       - checkout
-      - run gometalinter --vendor --tests --vendored-linters  --disable=gotype --enable=unused --enable=goimports --enable=gofmt ./...
+      - run:
+          name: gometalinter
+          command: gometalinter --vendor --tests --vendored-linters  --disable=gotype --enable=unused --enable=goimports --enable=gofmt ./...
 
 workflows:
   version: 2
