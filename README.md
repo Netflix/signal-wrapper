@@ -1,7 +1,7 @@
 # Signal Wrapper
 Signal wrapper is a very simple tool. It wraps programs to help them deal with signals. 
 
-`Usage: ./bin/signal-watcher-darwin-amd64 [shutdown command] [cmd] [args]`
+`Usage: ./bin/signal-wrapper-darwin-amd64 [shutdown command] [cmd] [args]`
 
 Let's say you have a program in a container. Let's say that this container is in a load balancing system, and it relies on that container's health to decide whether to route traffic to it. 
 
@@ -18,6 +18,9 @@ sleep 60
 ```
 
 You'd invoke it something like this:
-`./signal-watcher-darwin-amd64 ./shutdown.sh my_real_program -f -p 80`
+`./signal-wrapper-darwin-amd64 ./shutdown.sh my_real_program -f -p 80`
 
 It will call shutdown.sh, and wait until it exits before sending the signal to the "real" program.
+
+## Known issue
+This program only catches SIGTERM, or SIGINT. All other signals are handled as if they were delivered directly to the signal-wrapper. We may want to whitelist a set of signals which are forwarded.
