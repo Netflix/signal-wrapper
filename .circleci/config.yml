@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  build:
+  lint:
     docker:
       - image: titusoss/titus-ci-builder
     resource_class: xlarge
@@ -8,11 +8,15 @@ jobs:
     steps:
       - checkout
       - run:
+          name: install
+          command: govendor install +local
+      - run:
           name: gometalinter
           command: gometalinter --vendor --tests --vendored-linters  --disable=gotype --enable=unused --enable=goimports --enable=gofmt ./...
+
 
 workflows:
   version: 2
   build:
     jobs:
-      - build
+      - lint
