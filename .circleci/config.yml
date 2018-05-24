@@ -31,6 +31,10 @@ jobs:
           command: gox -osarch="linux/amd64" -osarch="darwin/amd64" -output="bin/signal-watcher-{{.OS}}-{{.Arch}}" -verbose .
       - store_artifacts:
           path: /go/src/github.com/Netflix/signal-wrapper/bin
+      - persist_to_workspace:
+          root: bin
+          paths:
+            - signal-watcher-linux-amd64
 
 workflows:
   version: 2
