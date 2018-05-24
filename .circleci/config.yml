@@ -28,13 +28,13 @@ jobs:
           command: mkdir bin/
       - run:
           name: build
-          command: gox -osarch="linux/amd64" -osarch="darwin/amd64" -output="bin/signal-watcher-{{.OS}}-{{.Arch}}" -verbose .
+          command: gox -osarch="linux/amd64" -osarch="darwin/amd64" -output="bin/signal-wrapper-{{.OS}}-{{.Arch}}" -verbose .
       - store_artifacts:
           path: /go/src/github.com/Netflix/signal-wrapper/bin
       - persist_to_workspace:
           root: bin
           paths:
-            - signal-watcher-linux-amd64
+            - signal-wrapper-linux-amd64
   test:
     docker:
       - image: python:3-stretch
@@ -44,7 +44,7 @@ jobs:
           at: /tmp/workspace
       - run:
           name: place signal-wrapper binary
-          command: mv /tmp/workspace/signal-watcher-linux-amd64 signal-watcher
+          command: mv /tmp/workspace/signal-wrapper-linux-amd64 signal-wrapper
       - run:
           name: tests
           command: ./test.sh
