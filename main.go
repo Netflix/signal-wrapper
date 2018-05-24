@@ -12,7 +12,7 @@ import (
 )
 
 func runShutdownScript(ctx context.Context, shutdownScript string) {
-	cmd := exec.CommandContext(ctx, shutdownScript)
+	cmd := exec.CommandContext(ctx, shutdownScript) // nolint: gas
 	// Pass through stderr / stdout directly
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
@@ -32,11 +32,15 @@ func signalWatcher(ctx context.Context, cmd *exec.Cmd, shutdownScript string) {
 	runShutdownScript(ctx, shutdownScript)
 	log.WithField("shutdownScript", shutdownScript).Info("Shutdown script complete")
 	log.Info("Forwarding signal: ", signal)
-	cmd.Process.Signal(signal)
+	if err := cmd.Process.Signal(signal); err != nil {
+		log.Error("Unable to forward signal: ", err)
+	}
 
 	for signal = range signalChan {
 		log.Info("Forwarding signal: ", signal)
-		cmd.Process.Signal(signal)
+		if err := cmd.Process.Signal(signal); err != nil {
+			log.Error("Unable to forward signal: ", err)
+		}
 	}
 }
 func main() {
@@ -48,7 +52,7 @@ func main() {
 	}
 	shutdownScript := os.Args[1]
 
-	cmd := exec.Command(os.Args[2], os.Args[3:]...)
+	cmd := exec.Command(os.Args[2], os.Args[3:]...) // nolint: gas
 	go signalWatcher(ctx, cmd, shutdownScript)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
