@@ -1,3 +1,4 @@
+[![CircleCI](https://circleci.com/gh/Netflix/signal-wrapper.svg?style=svg)](https://circleci.com/gh/Netflix/signal-wrapper)
 # Signal Wrapper
 Signal wrapper is a very simple tool. It wraps programs to help them deal with signals. 
 
